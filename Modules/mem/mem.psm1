@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 $masterFileRegex = New-Object -TypeName "System.Text.RegularExpressions.Regex" -ArgumentList @('MasterPageFile.*?"(?<mp>.*?)"', ([Text.RegularExpressions.RegexOptions]::Compiled -bor [Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [Text.RegularExpressions.RegexOptions]::InvariantCulture))
 
+
 Function Get-WebDirectories {
 	param([string] $dir=$(throw "dir required"))
 	$projectPaths = @('LMS', 'Application_Form', 'UpdateDetails', 'AccountManagement')
@@ -14,31 +15,22 @@ Function Get-AspxFiles {
 }
 
 Function Find-PagesWithAndWithoutMasterFiles ($files){
-	$pageMatches = @{}
-	$noMaster = "noMasterPage"
-	$pageMatches.Add($noMaster, @())
 	foreach ($file in $files) {
-		$contentLines = Get-Content $file
-		[bool] $found = $FALSE;
-		foreach($line in $contentLines){
-			if($masterFileRegex.IsMatch($line)){
-				$currentMatch = $masterFileRegex.Match($line).Groups["mp"].Value
-				$pages = @();
-				if($pageMatches.ContainsKey($currentMatch)){
-					$pageMatches[$currentMatch] += $file
-				} else {
-					$pageMatches.Add($currentMatch, @($file))
-				}
-				$found = $TRUE;
-				break
-			}
-		}
-		if(!$found){
-			$pageMatches[$noMaster] += $file
-			Write-Host "No match in $file"
-		} else {
-			Write-Host "File matches $file"
-		}
+		Find-MasterPageMatch($file)
 	}
-	return $pageMatches;
+}
+
+Function Find-MasterPageMatch($file){
+	$noMaster = "NoMasterPage"
+	$contentLines = Get-Content $file
+	$properties = @{
+					'MasterPage' = 'none';
+					'Page' = $file;
+	}
+	foreach($line in $contentLines){
+		if($masterFileRegex.IsMatch($line)){
+			$properties.Set_Item('MasterPage', $masterFileRegex.Match($line).Groups["mp"].Value;)
+			}
+	}
+	New-Object -TypeName PSObject -Prop $properties
 }
