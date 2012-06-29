@@ -9,12 +9,12 @@ Function Get-WebDirectories {
 		$dir.TrimEnd(@('/', '\')) + '\' + $subPath
 	}
 }
-Function Get-AspxFiles {
+Function Get-AspxFilePaths {
 	param([string] $dir=$(throw "dir required"))
-	Get-ChildItem -Recurse $dir | Where-Object {$_.Name.EndsWith('aspx')}
+	Get-ChildItem -Recurse $dir | Where-Object {$_.Name.EndsWith('aspx')} | Select -Expand PSPath
 }
 
-Function Find-PagesWithAndWithoutMasterFiles ($files){
+Function Find-MasterPagesInPages ($files){
 	foreach ($file in $files) {
 		Find-MasterPageMatch($file)
 	}
@@ -29,8 +29,8 @@ Function Find-MasterPageMatch($file){
 	}
 	foreach($line in $contentLines){
 		if($masterFileRegex.IsMatch($line)){
-			$properties.Set_Item('MasterPage', $masterFileRegex.Match($line).Groups["mp"].Value;)
+			$properties.Set_Item('MasterPage', $masterFileRegex.Match($line).Groups["mp"].Value)
 			}
 	}
-	New-Object -TypeName PSObject -Prop $properties
+	New-Object -TypeName PSObject -Prop $properties | Write-Output
 }
