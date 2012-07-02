@@ -1,7 +1,14 @@
 $ErrorActionPreference = "Stop"
-$masterFileRegex = New-Object -TypeName "System.Text.RegularExpressions.Regex" -ArgumentList @('MasterPageFile.*?"(~/)?((\w+/)+)?(?<mp>.*?)"', ([Text.RegularExpressions.RegexOptions]::Compiled -bor [Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [Text.RegularExpressions.RegexOptions]::InvariantCulture))
-$pathComponent
-$noMasterPage = 'none'
+
+$REGEX_OPTIONS = @([Text.RegularExpressions.RegexOptions]::Compiled -bor 
+		[Text.RegularExpressions.RegexOptions]::IgnoreCase -bor 
+		[Text.RegularExpressions.RegexOptions]::InvariantCulture)
+
+$MASTERFILE_REGEX = New-Object -TypeName "System.Text.RegularExpressions.Regex" -ArgumentList @('MasterPageFile.*?"(~/)?((\w+/)+)?(?<mp>.*?)"', $REGEX_OPTIONS) 
+
+$CSRF_INPUTFIELD_REGEX = New-Object -TypeName "System.Text.RegularExpressions.Regex" -ArgumentList @('<memCapital:AntiCsrfTokenControl', $REGEX_OPTIONS)
+
+$NO_MASTER_PAGE = 'none'
 $PROJECT_PATHS = @('LMS', 'Application_Form', 'UpdateDetails', 'AccountManagement')
 
 Function Get-WebDirectories {
@@ -23,15 +30,14 @@ Function Find-MasterPagesInPages ($files){
 }
 
 Function Find-MasterPageMatch($file){
-	$noMaster = "NoMasterPage"
 	$contentLines = Get-Content $file
 	$properties = @{
-					'MasterPage' = $noMasterPage;
+					'MasterPage' = $NO_MASTER_PAGE;
 					'Page' = $file;
 	}
 	foreach($line in $contentLines){
-		if($masterFileRegex.IsMatch($line)){
-			$properties.Set_Item('MasterPage', $masterFileRegex.Match($line).Groups["mp"].Value)
+		if($MASTERFILE_REGEX.IsMatch($line)){
+			$properties.Set_Item('MasterPage', $MASTERFILE_REGEX.Match($line).Groups["mp"].Value)
 			}
 	}
 	New-Object -TypeName PSObject -Prop $properties | Write-Output
@@ -45,8 +51,8 @@ Function Get-MasterPagePath($object){
 		throw ("No page path in object $object")
 	}
 
-	if($object.MasterPage -eq $noMasterPage){
-		return
+	if($object.MasterPage -eq $NO_MASTER_PAGE){
+		throw("Certainly no master page for: $NO_MASTER_PAGE")
 	}
 
 	$pagePathRawString = [string]$object.Page
@@ -70,9 +76,17 @@ Function Find-MasterPageRecursivelyFromLeaf ($directoryPathString, $masterPageFi
 	$path
 }
 
-
 Function StripLastPathComponent ($path){
 	Write-Debug "Path: $path"
 	$path.Substring(0, $path.LastIndexOf('\'))
+}
+
+Function Find-CsrfTokenInFile{
+	param([string] $path = $(throw "Path cannot be null"))
+	if(!(Test-Path $path)){
+		Write-Host "No file at: $path"
+		return
+	}
+	$CSRF_INPUTFIELD_REGEX.IsMatch($(Get-Content($path)))
 }
 

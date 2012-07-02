@@ -13,3 +13,19 @@ Function Get-AspxPages([string] $solutionDir){
 	}
 	$pagesWithMasterPage
 }
+
+Function Get-UniqueMasterPages($objects){
+	$objects | Group-Object -Property MasterPage | %{$_.Group[0]}
+	AddMasterPageHasCsrfTokenProperty($objects)
+}
+
+Function AddMasterPageHasCsrfTokenProperty($objects){
+	foreach ($item in $objects){
+		if($item.MasterPage -ne 'none')
+		{
+			Write-Debug "$item"
+			$masterFilePath = $(Get-MasterPagePath($item)).FullName
+			$item | Add-Member -Name "TokenPresent" -MemberType NoteProperty -Force -Value $(Find-CsrfTokenInFile($masterFilePath)) -PassThru
+		}
+	}
+}
