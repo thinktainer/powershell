@@ -1,11 +1,12 @@
 $ErrorActionPreference = "Stop"
-$masterFileRegex = New-Object -TypeName "System.Text.RegularExpressions.Regex" -ArgumentList @('MasterPageFile.*?"(?<mp>.*?)"', ([Text.RegularExpressions.RegexOptions]::Compiled -bor [Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [Text.RegularExpressions.RegexOptions]::InvariantCulture))
+$masterFileRegex = New-Object -TypeName "System.Text.RegularExpressions.Regex" -ArgumentList @('MasterPageFile.*?"(~/)?((\w+/)+)?(?<mp>.*?)"', ([Text.RegularExpressions.RegexOptions]::Compiled -bor [Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [Text.RegularExpressions.RegexOptions]::InvariantCulture))
 $pathComponent
 $noMasterPage = 'none'
+$PROJECT_PATHS = @('LMS', 'Application_Form', 'UpdateDetails', 'AccountManagement')
 
 Function Get-WebDirectories {
 	param([string] $dir=$(throw "dir required"))
-	$projectPaths = @('LMS', 'Application_Form', 'UpdateDetails', 'AccountManagement')
+	$projectPaths = $PROJECT_PATHS 
 	foreach($subPath in $projectPaths){
 		$dir.TrimEnd(@('/', '\')) + '\' + $subPath
 	}
@@ -51,13 +52,17 @@ Function Get-MasterPagePath($object){
 	$pagePathRawString = [string]$object.Page
 	$pagePathString = $pagePathRawString.Substring($pagePathRawString.IndexOf("::"), $pagePathRawString.Length - $pagePathRawString.IndexOf("::")).TrimStart("::")
 	Write-Debug ("PagePathString: $pagePathString")
-	$(Find-MasterPageRecursivelyFromLeaf $pagePathString $object.MasterPage.Trimstart(@('~', '/')))[0]
+	$trimmedPath = $object.MasterPage.Trimstart(@('~', '/'))
+	$(Find-MasterPageRecursivelyFromLeaf $pagePathString $trimmedPath)[0] 
 }
 
 Function Find-MasterPageRecursivelyFromLeaf ($directoryPathString, $masterPageFileName){
 	Write-Debug "page path: $directoryPathString, master page: $masterPageFileName"
 	$path = Get-ChildItem $directoryPathString -Recurse | ? {$_.Name -eq $masterPageFileName}
-	if($path -eq $null)
+	$lastPathFragment = $directoryPathString.Substring($directoryPathString.LastIndexOf('\'), $directoryPathString.Length - $directoryPathString.LastIndexOf('\')).Trim('\')
+	Write-Debug "Last Path Fragment: $lastPathFragment"
+	$isRootAppPath = $PROJECT_PATHS -contains $lastPathFragment 
+	if($path -eq $null -and -not $isRootAppPath) 
 	{
 		$directoryName = StripLastPathComponent($directoryPathString)
 		Find-MasterPageRecursivelyFromLeaf $directoryName $masterPageFileName
