@@ -15,8 +15,8 @@ Function Get-AspxPages([string] $solutionDir){
 }
 
 Function Get-UniqueMasterPages($objects){
-	$objects | Group-Object -Property MasterPage | %{$_.Group[0]}
-	AddMasterPageHasCsrfTokenProperty($objects)
+	$uniqueObjects = $objects | Group-Object -Property MasterPage | %{$_.Group[0]}
+	AddMasterPageHasCsrfTokenProperty($uniqueObjects)
 }
 
 Function AddMasterPageHasCsrfTokenProperty($objects){
@@ -28,4 +28,10 @@ Function AddMasterPageHasCsrfTokenProperty($objects){
 			$item | Add-Member -Name "TokenPresent" -MemberType NoteProperty -Force -Value $(Find-CsrfTokenInFile($masterFilePath)) -PassThru
 		}
 	}
+}
+
+Function Get-MasterPagesWithoutTokens([string] $path){
+	$pages = Get-AspxPages($path)
+	$uniqueMasterPages = Get-UniqueMasterPages($pages)
+	$uniqueMasterPages | Where-Object {$_.TokenPresent -eq $false}
 }
