@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 $masterFileRegex = New-Object -TypeName "System.Text.RegularExpressions.Regex" -ArgumentList @('MasterPageFile.*?"(?<mp>.*?)"', ([Text.RegularExpressions.RegexOptions]::Compiled -bor [Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [Text.RegularExpressions.RegexOptions]::InvariantCulture))
-
+$pathComponent
+$noMasterPage = 'none'
 
 Function Get-WebDirectories {
 	param([string] $dir=$(throw "dir required"))
@@ -24,7 +25,7 @@ Function Find-MasterPageMatch($file){
 	$noMaster = "NoMasterPage"
 	$contentLines = Get-Content $file
 	$properties = @{
-					'MasterPage' = 'none';
+					'MasterPage' = $noMasterPage;
 					'Page' = $file;
 	}
 	foreach($line in $contentLines){
@@ -34,3 +35,39 @@ Function Find-MasterPageMatch($file){
 	}
 	New-Object -TypeName PSObject -Prop $properties | Write-Output
 }
+
+Function Get-MasterPagePath($object){
+	if($object.MasterPage -eq $null){
+		throw ("No MasterPage in object $object")
+	}
+	if($object.Page -eq $null){
+		throw ("No page path in object $object")
+	}
+
+	if($object.MasterPage -eq $noMasterPage){
+		return
+	}
+
+	$pagePathRawString = [string]$object.Page
+	$pagePathString = $pagePathRawString.Substring($pagePathRawString.IndexOf("::"), $pagePathRawString.Length - $pagePathRawString.IndexOf("::")).TrimStart("::")
+	Write-Debug ("PagePathString: $pagePathString")
+	$(Find-MasterPageRecursivelyFromLeaf $pagePathString $object.MasterPage.Trimstart(@('~', '/')))[0]
+}
+
+Function Find-MasterPageRecursivelyFromLeaf ($directoryPathString, $masterPageFileName){
+	Write-Debug "page path: $directoryPathString, master page: $masterPageFileName"
+	$path = Get-ChildItem $directoryPathString -Recurse | ? {$_.Name -eq $masterPageFileName}
+	if($path -eq $null)
+	{
+		$directoryName = StripLastPathComponent($directoryPathString)
+		Find-MasterPageRecursivelyFromLeaf $directoryName $masterPageFileName
+	}
+	$path
+}
+
+
+Function StripLastPathComponent ($path){
+	Write-Debug "Path: $path"
+	$path.Substring(0, $path.LastIndexOf('\'))
+}
+
