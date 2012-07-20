@@ -13,7 +13,6 @@ $CSRF_INPUTFIELD_REGEX = New-Object -TypeName "System.Text.RegularExpressions.Re
 
 $FORM_FIELD_REGEX = New-Object -TypeName "System.Text.RegularExpressions.Regex" -ArgumentList @('<form.*/form>', $MULTILINE)
 
-$NO_MASTER_PAGE = 'none'
 
 $PROJECT_PATHS = @('LMS', 'BrokerArea', 'Application_Form', 'UpdateDetails', 'AccountManagement')
 
