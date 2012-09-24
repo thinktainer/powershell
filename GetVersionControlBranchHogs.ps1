@@ -1,5 +1,5 @@
 $loanBookBranchesDirectory = 'https://parkerfox.sourcerepo.com/parkerfox/svn/LoanBook2/branches';
-$svn = 'svn';
+$svn = Join-Path $env:ProgramFiles "TortoiseSVN\bin\svn.exe";
 $ls = 'ls';
 $info = 'info';
 
