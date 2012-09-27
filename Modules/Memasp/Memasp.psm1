@@ -7,7 +7,7 @@ $MULTILINE = @([Text.RegularExpressions.RegexOptions]::Compiled -bor
 		[Text.RegularExpressions.RegexOptions]::InvariantCulture -bor
 		[Text.RegularExpressions.RegexOptions]::Singleline)
 
-$MASTERFILE_REGEX = New-Object -TypeName "System.Text.RegularExpressions.Regex" -ArgumentList @('MasterPageFile.*?"(~/)?((\w+/)+)?(?<mp>.*?)"', $REGEX_OPTIONS) 
+$MASTERFILE_REGEX = New-Object -TypeName "System.Text.RegularExpressions.Regex" -ArgumentList @('MasterPageFile.*?"(~/)?(((\w|\.)+/)+)?(?<mp>.*?)"', $REGEX_OPTIONS) 
 
 $CSRF_INPUTFIELD_REGEX = New-Object -TypeName "System.Text.RegularExpressions.Regex" -ArgumentList @('<memCapital:AntiCsrfTokenControl', $REGEX_OPTIONS)
 
