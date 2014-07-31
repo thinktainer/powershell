@@ -1,12 +1,19 @@
 # environment variables
 
+Write-Host "Loading Environment Variables..." -NoNewline
 . "$Home\Documents\WindowsPowershell\LoadEnvVars.ps1"
-
+Write-Host "Done"
 # set up build environment
 
+
+Write-Host "Loading Visual Studio Environment...." -NoNewline
 . "$Home\Documents\WindowsPowershell\LoadVisualStudioEnvironment.ps1"
+Write-Host "Done"
+
+Write-Host "Loading poshgit..."
 # source git module
-. 'C:\Users\mschinz\Documents\WindowsPowerShell\Modules\posh-git\profile.example.ps1'
+. 'C:\tools\poshgit\dahlbyk-posh-git-95df787\profile.example.ps1'
+Write-Host "Done"
 
 # aliases
 Set-Alias vim vim.exe
