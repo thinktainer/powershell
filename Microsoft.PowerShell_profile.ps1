@@ -12,7 +12,7 @@ Write-Host "Done"
 
 Write-Host "Loading poshgit..."
 # source git module
-. 'C:\tools\poshgit\dahlbyk-posh-git-95df787\profile.example.ps1'
+. 'C:\tools\poshgit\dahlbyk-posh-git-869d4c5\profile.example.ps1'
 Write-Host "Done"
 
 # aliases
